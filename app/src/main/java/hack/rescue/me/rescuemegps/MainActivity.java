@@ -13,12 +13,20 @@ import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ServerValue;
+
+import java.util.HashMap;
+import java.util.Map;
+
 public class MainActivity extends AppCompatActivity {
 
-    public static final long MIN_TIME = 3000;
-    public static final float MIN_DISTANCE = 0;
+    public static final long MIN_TIME = 7 * 1000;
+    public static final float MIN_DISTANCE = 2;
     private TextView txtLat;
     private TextView txtLon;
+    private int gPSLocationNum = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,6 +36,8 @@ public class MainActivity extends AppCompatActivity {
         txtLat = (TextView)findViewById(R.id.latitud);
         txtLon = (TextView)findViewById(R.id.longitud);
 
+        saveLocation(1.2, 2.3);
+
         // Acquire a reference to the system Location Manager
         LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
 
@@ -35,7 +45,11 @@ public class MainActivity extends AppCompatActivity {
         LocationListener locationListener = new LocationListener() {
             public void onLocationChanged(Location location) {
                 // Called when a new location is found by the network location provider.
-                sendGPSLocation(location);
+                double latitude = location.getLatitude();
+                double longitude = location.getLongitude();
+                Toast.makeText(getApplicationContext(), latitude + " " + longitude, Toast.LENGTH_SHORT).show();
+                sendGPSLocation(latitude, longitude);
+                saveLocation(latitude, longitude);
             }
 
             public void onStatusChanged(String provider, int status, Bundle extras) {
@@ -50,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.d("onProviderDisabled", provider);
             }
         };
-        
+
 
         // Register the listener with the Location Manager to receive location updates
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -66,9 +80,25 @@ public class MainActivity extends AppCompatActivity {
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, MIN_TIME, MIN_DISTANCE, locationListener);
     }
 
-    private void sendGPSLocation(Location location) {
-        txtLat.setText(String.valueOf(location.getLatitude()));
-        txtLon.setText(String.valueOf(location.getLongitude()));
+    private void sendGPSLocation(Double lat, Double lon) {
+        txtLat.setText(String.valueOf(lat));
+        txtLon.setText(String.valueOf(lon));
+    }
+
+    private void saveLocation(Double lat, Double lon) {
+        DatabaseReference mFirebaseDatabaseReference = FirebaseDatabase.getInstance().getReference();
+
+        Map<String, Object> postValues = new HashMap<>();
+        postValues.put("lat", lat);
+        postValues.put("lon", lon);
+        postValues.put("alert", false);
+        postValues.put("time", ServerValue.TIMESTAMP);
+
+        Map<String, Object> childUpdates = new HashMap<>();
+        childUpdates.put("/users/juanjo/positions/" + gPSLocationNum, postValues);
+
+        mFirebaseDatabaseReference.updateChildren(childUpdates);
+        ++gPSLocationNum;
     }
 
 }
