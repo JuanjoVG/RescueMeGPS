@@ -18,9 +18,14 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.google.firebase.database.ServerValue;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -56,8 +61,6 @@ public class MainActivity extends AppCompatActivity {
         txtLat = (TextView) findViewById(R.id.latitud);
         txtLon = (TextView) findViewById(R.id.longitud);
 
-        saveLocation(1.2, 2.3);
-
         // Acquire a reference to the system Location Manager
         LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
 
@@ -69,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
                 double longitude = location.getLongitude();
                 Toast.makeText(getApplicationContext(), latitude + " " + longitude, Toast.LENGTH_SHORT).show();
                 sendGPSLocation(latitude, longitude);
-                saveLocation(latitude, longitude);
+                saveLocation(latitude, longitude, false);
             }
 
             public void onStatusChanged(String provider, int status, Bundle extras) {
@@ -107,13 +110,13 @@ public class MainActivity extends AppCompatActivity {
         txtLon.setText(String.valueOf(lon));
     }
 
-    private void saveLocation(Double lat, Double lon) {
+    private void saveLocation(Double lat, Double lon, boolean alert) {
         DatabaseReference mFirebaseDatabaseReference = FirebaseDatabase.getInstance().getReference();
 
         Map<String, Object> postValues = new HashMap<>();
         postValues.put("lat", lat);
         postValues.put("lon", lon);
-        postValues.put("alert", false);
+        postValues.put("alert", alert);
         postValues.put("time", ServerValue.TIMESTAMP);
 
         Map<String, Object> childUpdates = new HashMap<>();
@@ -129,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
             public void handleMessage(Message msg) {
                 String str = (String) msg.obj;
                 Log.d("Bluetooth", str);
-                if (str.equals("ALERT")) {
+                if (str.contains("ALERT")) {
                     hayAlert();
                 }
             }
@@ -140,7 +143,32 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void hayAlert() {
-        mConnectedThread.write("x" + txtLat.getText() + "y" + txtLon.getText());
+        final DatabaseReference mFirebaseDatabaseReference = FirebaseDatabase.getInstance().getReference();
+        ValueEventListener listener = new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot snap : dataSnapshot.getChildren()) {
+                    Map<String, Object> mapValues = (Map<String, Object>) snap.getValue();
+
+                    Double lat = (Double) mapValues.get("lat");
+                    Double lon = (Double) mapValues.get("lon");
+                    mFirebaseDatabaseReference.child("users").child("juanjo").child("positions")
+                            .limitToLast(1).removeEventListener(this);
+                    mConnectedThread.write(lat + "/" + lon + "#");
+                    saveLocation(lat, lon, true);
+                    AsyncLocation asyncLocation = new AsyncLocation();
+                    asyncLocation.execute("Juanjo needs help");
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        };
+
+        mFirebaseDatabaseReference.child("users").child("juanjo").child("positions")
+                .limitToLast(1).addValueEventListener(listener);
     }
 
     private void checkBTState() {
@@ -180,10 +208,6 @@ public class MainActivity extends AppCompatActivity {
         }
         mConnectedThread = new ConnectedThread(btSocket, bluetoothIn);
         mConnectedThread.start();
-
-        //I send a character when resuming.beginning transmission to check device is connected
-        //If it is not an exception will be thrown in the write method and finish() will be called
-        mConnectedThread.write("x");
     }
 
     @Override

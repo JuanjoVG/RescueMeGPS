@@ -25,6 +25,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Latitud: "
+                android:textSize="40sp"
                 android:textAlignment="center"/>
 
             <TextView
@@ -32,6 +33,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="-"
+                android:textSize="40sp"
                 android:textAlignment="center"/>
 
 
@@ -49,6 +51,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Longitud: "
+                android:textSize="40sp"
                 android:textAlignment="center"/>
 
             <TextView
@@ -56,6 +59,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="-"
+                android:textSize="40sp"
                 android:textAlignment="center"/>
         </LinearLayout>
 
