@@ -1,11 +1,17 @@
 package hack.rescue.me.rescuemegps;
 
 import android.Manifest;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -13,20 +19,36 @@ import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.IOException;
+import java.util.UUID;
+
 public class MainActivity extends AppCompatActivity {
 
     public static final long MIN_TIME = 3000;
     public static final float MIN_DISTANCE = 0;
+    private static final int REQUEST_ENABLE_BT = 7;
     private TextView txtLat;
     private TextView txtLon;
+
+    Handler bluetoothIn;                     //used to identify handler message
+    private BluetoothAdapter btAdapter = null;
+    private BluetoothSocket btSocket = null;
+
+    private ConnectedThread mConnectedThread;
+
+    // SPP UUID service - this should work for most devices
+    private static final UUID BTMODULEUUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
+
+    // String for MAC address
+    private static String address = "20:15:10:20:04:46";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        txtLat = (TextView)findViewById(R.id.latitud);
-        txtLon = (TextView)findViewById(R.id.longitud);
+        txtLat = (TextView) findViewById(R.id.latitud);
+        txtLon = (TextView) findViewById(R.id.longitud);
 
         // Acquire a reference to the system Location Manager
         LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
@@ -50,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.d("onProviderDisabled", provider);
             }
         };
-        
+
 
         // Register the listener with the Location Manager to receive location updates
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -64,11 +86,87 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, MIN_TIME, MIN_DISTANCE, locationListener);
+
+        bluetoothSetup();
     }
 
     private void sendGPSLocation(Location location) {
         txtLat.setText(String.valueOf(location.getLatitude()));
         txtLon.setText(String.valueOf(location.getLongitude()));
+    }
+
+    private void bluetoothSetup() {
+        bluetoothIn = new Handler() {
+            @Override
+            public void handleMessage(Message msg) {
+                String str = (String) msg.obj;
+                Log.d("Bluetooth", str);
+                if (str.equals("ALERT")) {
+                    hayAlert();
+                }
+            }
+        };
+
+        btAdapter = BluetoothAdapter.getDefaultAdapter();       // get Bluetooth adapter
+        checkBTState();
+    }
+
+    private void hayAlert() {
+        mConnectedThread.write("x" + txtLat.getText() + "y" + txtLon.getText());
+    }
+
+    private void checkBTState() {
+        if (!btAdapter.isEnabled()) {
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+        }
+    }
+
+    private BluetoothSocket createBluetoothSocket(BluetoothDevice device) throws IOException {
+
+        return device.createRfcommSocketToServiceRecord(BTMODULEUUID);
+        //creates secure outgoing connecetion with BT device using UUID
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        //create device and set the MAC address
+        BluetoothDevice device = btAdapter.getRemoteDevice(address);
+
+        try {
+            btSocket = createBluetoothSocket(device);
+        } catch (IOException e) {
+            Toast.makeText(getBaseContext(), "Socket creation failed", Toast.LENGTH_LONG).show();
+        }
+        // Establish the Bluetooth socket connection.
+        try {
+            btSocket.connect();
+        } catch (IOException e) {
+            try {
+                btSocket.close();
+            } catch (IOException e2) {
+                //insert code to deal with this
+            }
+        }
+        mConnectedThread = new ConnectedThread(btSocket, bluetoothIn);
+        mConnectedThread.start();
+
+        //I send a character when resuming.beginning transmission to check device is connected
+        //If it is not an exception will be thrown in the write method and finish() will be called
+        mConnectedThread.write("x");
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        try {
+            //Don't leave Bluetooth sockets open when leaving activity
+            btSocket.close();
+        } catch (IOException e2) {
+            //insert code to deal with this
+        }
     }
 
 }
