@@ -1,0 +1,107 @@
+{
+  "project_info": {
+    "project_number": "442827029086",
+    "firebase_url": "https://rescueme-2beff.firebaseio.com",
+    "project_id": "rescueme-2beff",
+    "storage_bucket": "rescueme-2beff.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:442827029086:android:9c636d65c6191523",
+        "android_client_info": {
+          "package_name": "me.rescue.hack.rescueme"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "442827029086-gsm0se4ggv76v5d9dmf80vdqusq05n38.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "me.rescue.hack.rescueme",
+            "certificate_hash": "c9cf39c984f8569d29c221fc48d182f95771bf20"
+          }
+        },
+        {
+          "client_id": "442827029086-oh40rejcf308dtn7678s3b85i92690f5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "me.rescue.hack.rescueme",
+            "certificate_hash": "40500eeac75baf99367ff8c43545382acf8b7662"
+          }
+        },
+        {
+          "client_id": "442827029086-meuu5j4mf7filtb07h6fnbcrgie9dibv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA-bD8IuUlTQ3HRDjR2jT3bDjcuswCInYY"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "442827029086-meuu5j4mf7filtb07h6fnbcrgie9dibv.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:442827029086:android:207e403685983309",
+        "android_client_info": {
+          "package_name": "hack.rescue.me.rescuemegps"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "442827029086-ip26rqe0qrnkin31a247lf8507tj010u.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "hack.rescue.me.rescuemegps",
+            "certificate_hash": "c9cf39c984f8569d29c221fc48d182f95771bf20"
+          }
+        },
+        {
+          "client_id": "442827029086-meuu5j4mf7filtb07h6fnbcrgie9dibv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA-bD8IuUlTQ3HRDjR2jT3bDjcuswCInYY"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "442827029086-meuu5j4mf7filtb07h6fnbcrgie9dibv.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
